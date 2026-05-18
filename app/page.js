@@ -92,7 +92,7 @@ export default function Page() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem', minWidth: '300px' }}>
           {/* SEARCH SELECTION */}
           <div style={{ backgroundColor: '#1a1a1a', padding: '1.5rem', borderRadius: '8px', border: '1px solid #2a2a2a' }}>
-            <h2 style={{ color: '#d4af37', marginTop: 0 }}>>> TACTICAL RECON</h2>
+            <h2 style={{ color: '#d4af37', marginTop: 0 }}>{" >> "} TACTICAL RECON</h2>
             <select style={{ backgroundColor: '#000', color: '#d4af37', border: '1px solid #d4af37', padding: '0.5rem', width: '100%', marginBottom: '1.5rem', fontSize: '1rem', fontWeight: 'bold' }} onChange={(e) => setSearch(e.target.value)} value={search}>
               {keywords.map(k => <option key={k.en} value={k.en}>{k.en}</option>)}
             </select>
