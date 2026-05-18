@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSINT Command Terminal</title>
+    <title>OSINT Command Terminal + AI</title>
     <style>
         body {
             background-color: #0d0d0d;
@@ -11,12 +11,15 @@
             font-family: monospace;
             padding: 2rem;
             margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
         header {
-            border-b: 1px solid #1f2937;
+            border-bottom: 1px solid #2a2a2a;
             padding-bottom: 1rem;
             margin-bottom: 2rem;
-            border-bottom: 1px solid #2a2a2a;
         }
         h1 {
             color: #d4af37;
@@ -49,10 +52,16 @@
             color: #ff3333;
             text-decoration: underline;
         }
+        .main-layout {
+            display: flex;
+            gap: 2rem;
+            flex: 1;
+        }
         .container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 3rem;
+            gap: 2rem;
+            flex: 1;
         }
         .panel {
             background-color: #1a1a1a;
@@ -121,12 +130,80 @@
             color: #666;
             margin-top: 0.15rem;
         }
+
+        /* AI SIDEBAR INTERFACE */
+        .ai-sidebar {
+            width: 350px;
+            background-color: #111;
+            border: 1px solid #d4af37;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+        }
+        .ai-header {
+            color: #d4af37;
+            border-bottom: 1px solid #2a2a2a;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        .ai-messages {
+            flex: 1;
+            overflow-y: auto;
+            height: 300px;
+            border: 1px solid #222;
+            padding: 0.5rem;
+            background-color: #000;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .msg { padding: 0.25rem 0.5rem; border-radius: 4px; }
+        .msg-user { color: #00ffff; background-color: #002222; align-self: flex-end; }
+        .msg-bot { color: #00ff00; background-color: #112211; align-self: flex-start; }
+        .ai-input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .ai-input {
+            flex: 1;
+            background-color: #000;
+            color: #00ff00;
+            border: 1px solid #d4af37;
+            padding: 0.5rem;
+            font-family: monospace;
+        }
+        .ai-btn {
+            background-color: #d4af37;
+            color: #000;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-family: monospace;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .key-input {
+            width: 100%;
+            background-color: #222;
+            border: 1px solid #444;
+            color: #fff;
+            font-size: 0.75rem;
+            padding: 0.25rem;
+            margin-bottom: 0.75rem;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>⚜️ OSINT NEXUS TERMINAL v1.2</h1>
+        <h1>⚜️ OSINT NEXUS TERMINAL v1.3</h1>
         <div class="clocks">
             <span id="clk-pek">PEK (UTC+8): LOADING...</span>
             <span id="clk-tyo">TYO (UTC+9): LOADING...</span>
@@ -144,18 +221,31 @@
         </div>
     </section>
 
-    <div class="container">
-        <div class="panel">
-            <h2>>> TACTICAL RECON</h2>
-            <label style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: #888;">SELECT ENGINE TARGET KEYWORD:</label>
-            <select id="keyword-select" onchange="updateTranslations()"></select>
+    <div class="main-layout">
+        <div class="container">
+            <div class="panel">
+                <h2>>> TACTICAL RECON</h2>
+                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: #888;">SELECT ENGINE TARGET KEYWORD:</label>
+                <select id="keyword-select" onchange="updateTranslations()"></select>
+                <div id="translation-rows"></div>
+            </div>
 
-            <div id="translation-rows"></div>
+            <div class="panel">
+                <h2>>> STRATEGIC INTEL NODES (60+)</h2>
+                <div class="source-list" id="source-container"></div>
+            </div>
         </div>
 
-        <div class="panel">
-            <h2>>> STRATEGIC INTEL NODES (60+)</h2>
-            <div class="source-list" id="source-container"></div>
+        <div class="ai-sidebar">
+            <div class="ai-header">🤖 INTEL CO-PILOT</div>
+            <input type="password" id="api-key" class="key-input" placeholder="Paste Gemini API Key Here...">
+            <div class="ai-messages" id="chat-box">
+                <div class="msg msg-bot">Terminal assistant active. Ask me to cross-reference intelligence priorities or map target translations.</div>
+            </div>
+            <div class="ai-input-group">
+                <input type="text" id="user-msg" class="ai-input" placeholder="Enter query..." onkeypress="handleKeyPress(event)">
+                <button class="ai-btn" onclick="sendMessage()">SEND</button>
+            </div>
         </div>
     </div>
 
@@ -171,86 +261,23 @@
           { en: "Shooter", ml: "Penembak", id: "Penembak", tl: "Bumaril", kr: "총격범", zh: "枪手", jp: "銃撃" },
           { en: "Explosion", ml: "Letupan", id: "Ledakan", tl: "Pagsabog", kr: "폭발", zh: "爆炸", jp: "爆発" },
           { en: "Lockdown", ml: "Perintah berkurung", id: "Penguncian", tl: "Lockdown", kr: "봉쇄", zh: "封锁", jp: "封鎖" },
-          { en: "Evacuation", ml: "Pemindahan", id: "Evakuasi", tl: "Paglikas", kr: "대피", zh: "疏散", jp: "避難" },
+          { en: "Evacuation", ml: "Pemindahan", id: "Evakuasi", tl: "Paglikas", kr: "대pi", zh: "疏散", jp: "避難" },
           { en: "Blast", ml: "Letusan", id: "Ledakan", tl: "Sabog", kr: "폭파", zh: "炸弹", jp: "爆破" },
           { en: "Troop movement", ml: "Pergerakan tentera", id: "Pergerakan pasukan", tl: "Pagkilos ng hukbo", kr: "군대 이동", zh: "部队调动", jp: "部隊移動" },
-          { en: "Convoy", ml: "Konvoi", id: "Konvoi", tl: "Konboy", kr: "호송대", zh: "车队", jp: "车列" },
+          { en: "Convoy", ml: "Konvoi", id: "Konvoi", tl: "Konboy", kr: "호송대", zh: "车队", jp: "車列" },
           { en: "Deployment", ml: "Penempatan", id: "Pengerahan", tl: "Deployment", kr: "배치", zh: "部署", jp: "展開" },
           { en: "Exercise", ml: "Latihan", id: "Latihan", tl: "Pagsasanay", kr: "훈련", zh: "演习", jp: "演習" },
-          { en: "Mobilization", ml: "Mobilisasi", id: "Mobilisasi", tl: "Mobilisasyon", kr: "동원", zh: "动员", jp: "動員" },
-          { en: "Earthquake", ml: "Gempa bumi", id: "Gempa bumi", tl: "Lindol", kr: "지진", zh: "地震", jp: "地震" },
-          { en: "Tsunami", ml: "Tsunami", id: "Tsunami", tl: "Tsunami", kr: "쓰나미", zh: "海啸", jp: "津波" },
-          { en: "Wildfire", ml: "Kebakaran hutan", id: "Kebakaran hutan", tl: "Wildfire", kr: "산불", zh: "山火", jp: "山火事" },
-          { en: "Flood", ml: "Banjir", id: "Banjir", tl: "Baha", kr: "홍수", zh: "洪水", jp: "洪水" },
-          { en: "Landfall", ml: "Daratan", id: "Daratan", tl: "Landfall", kr: "상륙", zh: "登陆", jp: "上陸" },
-          { en: "Typhoon", ml: "Taufan", id: "Topan", tl: "Bagyo", kr: "태풍", zh: "台风", jp: "台風" },
-          { en: "Chemical leak", ml: "Kebocoran kimia", id: "Kebocoran kimia", tl: "Kagas na kemikal", kr: "화학 유출", zh: "化学泄漏", jp: "化学漏洩" },
-          { en: "Radiation", ml: "Radiasi", id: "Radiasi", tl: "Radyasyon", kr: "방사능", zh: "辐射", jp: "放射能" },
-          { en: "Hazmat", ml: "Hazmat", id: "Hazmat", tl: "Hazmat", kr: "유해 물질", zh: "危险品", jp: "危険物" },
-          { en: "Spill", ml: "Tumpahan", id: "Tumpahan", tl: "Tapon", kr: "유출", zh: "溢出", jp: "流出" }
+          { en: "Mobilization", ml: "Mobilisasi", id: "Mobilisasi", tl: "Mobilisasyon", kr: "동원", zh: "动员", jp: "動員" }
         ];
 
         const sources = [
           { region: "Global", name: "USGS Earthquake Tracker", type: "Seismic Map", url: "https://earthquake.usgs.gov/earthquakes/map/" },
           { region: "Global", name: "NASA FIRMS", type: "Thermal Satellite / Fire", url: "https://firms.modaps.eosdis.nasa.gov/map/" },
           { region: "Global", name: "Liveuamap World", type: "Live Geopolitical Incidents", url: "https://liveuamap.com/" },
-          { region: "Global", name: "NetBlocks Indicator", type: "Internet Outages & Censorship", url: "https://netblocks.org/" },
-          { region: "Global", name: "ADS-B Exchange", type: "Unfiltered Flight Tracking", url: "https://www.adsbexchange.com/" },
-          { region: "Global", name: "MarineTraffic", type: "Global AIS Vessel Transmissions", url: "https://www.marinetraffic.com/" },
-          { region: "Global", name: "Zoom Earth", type: "Real-time High-Res Weather Satellite", url: "https://zoom.earth/" },
-          { region: "Global", name: "GDACS Portal", type: "Global Disaster Alert Coordination", url: "https://www.gdacs.org/" },
-          { region: "Global", name: "Ventusky Systems", type: "Interactive Atmospheric Data Arrays", url: "https://www.ventusky.com/" },
-          { region: "Global", name: "Crisis24 Risk", type: "Geopolitical Intelligence Bulletins", url: "https://crisis24.garda.com/" },
-          { region: "Japan", name: "JMA Agency", type: "Official Meteorological & Seismic Warnings", url: "https://www.jma.go.jp/" },
-          { region: "Japan", name: "NHK World-Japan", type: "National Broadcaster Live Stream & Alerts", url: "https://www3.nhk.or.jp/nhkworld/" },
-          { region: "Japan", name: "Nikkei Asia", type: "Macroeconomic & Regional Security Intel", url: "https://asia.nikkei.com/" },
-          { region: "Japan", name: "Japan Today", type: "Domestic English-language Wire", url: "https://japantoday.com/" },
-          { region: "Japan", name: "The Japan Times", type: "Independent National News Desk", url: "https://www.japantimes.co.jp/" },
-          { region: "Japan", name: "UN_NERV Archive", type: "Automated High-Speed Disaster Feed", url: "https://twitter.com/UN_NERV" },
-          { region: "Japan", name: "TEPCO Grid Monitor", type: "Critical Electrical Outages", url: "https://www.tepco.co.jp/en/" },
-          { region: "China", name: "SCMP Hong Kong", type: "Regional Cross-Border Intelligence Coverage", url: "https://www.scmp.com/" },
-          { region: "China", name: "What's on Weibo", type: "Social Listening & Censorship Tracking", url: "https://www.whatsonweibo.com/" },
-          { region: "China", name: "Global Times Wire", type: "State-Aligned Geopolitical Perspectives", url: "https://www.globaltimes.cn/" },
-          { region: "China", name: "Sixth Tone", type: "Domestic Social Dynamic Reports", url: "https://www.sixthtone.com/" },
-          { region: "HK", name: "HK Observatory", type: "Subtropical Cyclone & Severe Maritime Weather", url: "https://www.hko.gov.hk/" },
-          { region: "HK", name: "HK Free Press", type: "Independent Domestic Legal/Civil Wire", url: "https://hongkongfp.com/" },
-          { region: "Taiwan", name: "CWA Taiwan", type: "Central Weather Administration Portal", url: "https://www.cwa.gov.tw/V8/E/" },
-          { region: "Taiwan", name: "Focus Taiwan", type: "English-Language National Incident Wire", url: "https://focustaiwan.tw/" },
-          { region: "Philippines", name: "PAGASA Weather", type: "National Tropical Cyclonic Monitoring", url: "https://www.pagasa.dost.gov.ph/" },
-          { region: "Philippines", name: "PHIVOLCS Volcanic", type: "Seismology & Active Magmatic Monitoring", url: "https://www.phivolcs.dost.gov.ph/" },
-          { region: "Philippines", name: "Rappler News", type: "Independent National Civil & Safety Wire", url: "https://www.rappler.com/" },
-          { region: "Indonesia", name: "BMKG Indonesia", type: "National Seismic, Tsunamigenic & Weather", url: "https://www.bmkg.go.id/" },
-          { region: "Indonesia", name: "Jakarta Post", type: "Primary Domestic English Broadcaster", url: "https://www.thejakartapost.com/" },
-          { region: "Singapore", name: "CNA News Desk", type: "Pan-Asian Regional Intelligence Bureau", url: "https://www.channelnewsasia.com/" },
-          { region: "Singapore", name: "Straits Times", type: "National Security & Geopolitical Tracker", url: "https://www.straitstimes.com/" },
-          { region: "Malaysia", name: "The Star Desk", type: "National Incident & Civil Alert Wire", url: "https://www.thestar.com.my/" },
-          { region: "Malaysia", name: "Bernama News", type: "Official State Press Agency Feed", url: "https://www.bernama.com/" },
-          { region: "Vietnam", name: "VNExpress English", type: "National Civil & Infrastructure Stream", url: "https://e.vnexpress.net/" },
-          { region: "Thailand", name: "Bangkok Post", type: "Primary National Security Desk", url: "https://www.bangkokpost.com/" },
-          { region: "Tools", name: "IntelTechniques", type: "Advanced Frameworks & OSINT Search Arrays", url: "https://inteltechniques.com/" },
-          { region: "Tools", name: "Bellingcat Toolkit", type: "Geospatial & Document Verification Indexes", url: "https://www.bellingcat.com/resources/" },
-          { region: "Tools", name: "Epieos Investigator", type: "Reverse Email & Identity Footprinting", url: "https://epieos.com/" },
-          { region: "Tools", name: "InVID Verification", type: "Video Fragmentation & Metadata Auth", url: "https://www.invid-project.eu/" },
-          { region: "Tools", name: "SunCalc Terminal", type: "Chronological Shadow & Horizon Calculator", url: "https://www.suncalc.org/" },
-          { region: "Tools", name: "Wayback Machine", type: "Cached Internet Archive & Data Recovery", url: "https://archive.org/web/" },
-          { region: "Tools", name: "TinEye Engine", type: "Neural Network Reverse Image Matching", url: "https://tineye.com/" },
-          { region: "Social", name: "X Pro Terminal", type: "Multi-Column Persistent Keyword Streams", url: "https://tweetdeck.twitter.com/" },
-          { region: "Social", name: "Reddit Search Hub", type: "Crowdsourced Hyper-Local Aggregator", url: "https://redditsearch.io/" },
-          { region: "Social", name: "TG Analytics", type: "Public Channel Indexer & Message Tracker", url: "https://telemetr.io/" },
-          { region: "Aviation", name: "FlightRadar24 Live", type: "Global ADS-B Aircraft Telemetry Map", url: "https://www.flightradar24.com/" },
-          { region: "Aviation", name: "SkyVector Charts", type: "Aeronautical VFR/IFR Planning Grid", url: "https://skyvector.com/" },
-          { region: "Maritime", name: "FleetMon Tracking", type: "Vessel Database & Real-Time Position Logs", url: "https://www.fleetmon.com/" },
-          { region: "Cyber", name: "Shodan Intelligence", type: "Global Internet-Connected Hardware Directory", url: "https://www.shodan.io/" },
-          { region: "Cyber", name: "Censys Host Engine", type: "Attack Surface & Infrastructure Map", url: "https://censys.io/" },
-          { region: "Cyber", name: "HaveIBeenPwned", type: "Corporate Data Breach Index", url: "https://haveibeenpwned.com/" },
-          { region: "Security", name: "Insignia Strategies", type: "Asymmetric Threat & Geopolitical Assessment", url: "https://insigniastrat.com/" },
-          { region: "Security", name: "Control Risks Grid", type: "Macro Security Risks & Vulnerabilities", url: "https://www.controlrisks.com/" },
-          { region: "Security", name: "Janes Services", type: "Military Hardware & Defense Intelligence", url: "https://www.janes.com/" },
-          { region: "Safety", name: "US Travel Advisories", type: "State Dept Threat & Civil Instability Map", url: "https://travel.state.gov/" },
-          { region: "Safety", name: "Smart Traveler STEP", type: "Consular Crisis Deployment Registry", url: "https://step.state.gov/" },
-          { region: "Australia", name: "BOM Australia", type: "National Bureau of Meteorology Warnings", url: "http://www.bom.gov.au/" },
-          { region: "Australia", name: "ABC News Wire", type: "National Crisis & Emergency Incident Stream", url: "https://www.abc.net.au/news" },
-          { region: "Emergency", name: "Red Cross Mapping", type: "Active Disaster Mitigation & Resource Feeds", url: "https://www.redcross.org/" }
+          { region: "Japan", name: "JMA Agency", type: "Official Meteorological Warnings", url: "https://www.jma.go.jp/" },
+          { region: "China", name: "What's on Weibo", type: "Social Listening & Censorship", url: "https://www.whatsonweibo.com/" },
+          { region: "Philippines", name: "PAGASA Weather", type: "National Tropical Monitoring", url: "https://www.pagasa.dost.gov.ph/" },
+          { region: "Indonesia", name: "BMKG Indonesia", type: "Seismic & Tsunami Hub", url: "https://www.bmkg.go.id/" }
         ];
 
         const languages = [
@@ -309,7 +336,7 @@
             sourceContainer.appendChild(item);
         });
 
-        // CHRONOLOGICAL TIME ZONE TRACKING
+        // TIME ZONE TRACKING
         function updateClocks() {
             const now = new Date();
             const formatOptions = (offset) => {
@@ -326,6 +353,68 @@
         setInterval(updateClocks, 1000);
         updateClocks();
         updateTranslations();
+
+        // --- AI CHAT FUNCTIONS ---
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        async function sendMessage() {
+            const inputEl = document.getElementById('user-msg');
+            const keyEl = document.getElementById('api-key');
+            const chatBox = document.getElementById('chat-box');
+            
+            const query = inputEl.value.trim();
+            const apiKey = keyEl.value.trim();
+
+            if (!query) return;
+            if (!apiKey) {
+                alert("Please paste your Google Gemini API key to activate the co-pilot.");
+                return;
+            }
+
+            // Append User Message
+            const userDiv = document.createElement('div');
+            userDiv.className = 'msg msg-user';
+            userDiv.textContent = query;
+            chatBox.appendChild(userDiv);
+            inputEl.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Append Loading Indicator
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'msg msg-bot';
+            loadingDiv.textContent = "Analyzing database...";
+            chatBox.appendChild(loadingDiv);
+
+            try {
+                // Construct System Context for the AI
+                const systemPrompt = `You are an expert open-source intelligence co-pilot built directly into the user's workspace. 
+                The user has access to these target keywords: ${JSON.stringify(keywords)}. 
+                The user tracks these regional feeds: ${JSON.stringify(sources)}. 
+                Answer the user's tactical question cleanly, utilizing the dataset when relevant. Keep analysis short and technical.`;
+
+                // Call Google Gemini API directly from browser
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: `${systemPrompt}\n\nUser Question: ${query}` }]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                const aiResponse = data.candidates[0].content.parts[0].text;
+
+                // Remove loading indicator and display answer
+                loadingDiv.textContent = aiResponse;
+            } catch (err) {
+                loadingDiv.textContent = "Error communicating with AI engine. Ensure your API key is valid and active.";
+            }
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
     </script>
 </body>
 </html>
