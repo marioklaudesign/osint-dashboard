@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+// Forces the route to be treated as a dynamic backend runtime
+export const dynamic = 'force-dynamic';
+
 export async function POST(request) {
   try {
     const { query, keywords, sources } = await request.json();
@@ -25,9 +28,13 @@ export async function POST(request) {
     });
 
     const data = await response.json();
-    const aiResponse = data.candidates[0].content.parts[0].text;
     
-    return NextResponse.json({ response: aiResponse });
+    if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+      const aiResponse = data.candidates[0].content.parts[0].text;
+      return NextResponse.json({ response: aiResponse });
+    } else {
+      return NextResponse.json({ error: "Unexpected API response format structure." }, { status: 500 });
+    }
   } catch (error) {
     return NextResponse.json({ error: "Internal Gateway Routing Error." }, { status: 500 });
   }
