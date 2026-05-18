@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
   // 1. Paste your verified AI Studio key directly inside these quotes:
-  const apiKey = "PASTE_YOUR_AI_STUDY_KEY_HERE";
+  const apiKey = "AIzaSyC9xwUBNiPS5P4ukztLCnL-OHoh16aXLoU";
 
   try {
     // Safely parse the body input
