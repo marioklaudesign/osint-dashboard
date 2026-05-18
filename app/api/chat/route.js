@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request) {
   try {
     const { query, keywords, sources } = await request.json();
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || "AIzaSyBjHURdgdT-W9BuvZgsyBGVzsGDkcd19po";
 
     if (!apiKey) {
       return NextResponse.json({ error: "Server API Configuration Missing." }, { status: 500 });
