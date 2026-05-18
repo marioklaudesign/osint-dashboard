@@ -154,7 +154,7 @@
         .ai-messages {
             flex: 1;
             overflow-y: auto;
-            height: 300px;
+            height: 350px;
             border: 1px solid #222;
             padding: 0.5rem;
             background-color: #000;
@@ -188,22 +188,12 @@
             font-weight: bold;
             cursor: pointer;
         }
-        .key-input {
-            width: 100%;
-            background-color: #222;
-            border: 1px solid #444;
-            color: #fff;
-            font-size: 0.75rem;
-            padding: 0.25rem;
-            margin-bottom: 0.75rem;
-            font-family: monospace;
-        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>⚜️ OSINT NEXUS TERMINAL v1.3</h1>
+        <h1>⚜️ OSINT NEXUS TERMINAL v1.4</h1>
         <div class="clocks">
             <span id="clk-pek">PEK (UTC+8): LOADING...</span>
             <span id="clk-tyo">TYO (UTC+9): LOADING...</span>
@@ -237,10 +227,9 @@
         </div>
 
         <div class="ai-sidebar">
-            <div class="ai-header">🤖 INTEL CO-PILOT</div>
-            <input type="password" id="api-key" class="key-input" placeholder="Paste Gemini API Key Here...">
+            <div class="ai-header">🤖 INTEL CO-PILOT // ONLINE</div>
             <div class="ai-messages" id="chat-box">
-                <div class="msg msg-bot">Terminal assistant active. Ask me to cross-reference intelligence priorities or map target translations.</div>
+                <div class="msg msg-bot">Terminal assistant fully synchronized. Ready to cross-reference targets or design collection vectors.</div>
             </div>
             <div class="ai-input-group">
                 <input type="text" id="user-msg" class="ai-input" placeholder="Enter query..." onkeypress="handleKeyPress(event)">
@@ -250,6 +239,9 @@
     </div>
 
     <script>
+        // HARDCODED API KEY INTEGRATION (PASTE YOUR GEMINI API KEY HERE)
+        const GEMINI_API_KEY = "AIzaSyBjHURdgdT-W9BuvZgsyBGVzsGDkcd19po";
+
         // DATA ARRAYS
         const keywords = [
           { en: "Protest", ml: "Protes", id: "Unjuk rasa", tl: "Protesta", kr: "시위", zh: "抗议", jp: "抗議" },
@@ -261,160 +253,10 @@
           { en: "Shooter", ml: "Penembak", id: "Penembak", tl: "Bumaril", kr: "총격범", zh: "枪手", jp: "銃撃" },
           { en: "Explosion", ml: "Letupan", id: "Ledakan", tl: "Pagsabog", kr: "폭발", zh: "爆炸", jp: "爆発" },
           { en: "Lockdown", ml: "Perintah berkurung", id: "Penguncian", tl: "Lockdown", kr: "봉쇄", zh: "封锁", jp: "封鎖" },
-          { en: "Evacuation", ml: "Pemindahan", id: "Evakuasi", tl: "Paglikas", kr: "대pi", zh: "疏散", jp: "避難" },
+          { en: "Evacuation", ml: "Pemindahan", id: "Evakuasi", tl: "Paglikas", kr: "대피", zh: "疏散", jp: "避難" },
           { en: "Blast", ml: "Letusan", id: "Ledakan", tl: "Sabog", kr: "폭파", zh: "炸弹", jp: "爆破" },
           { en: "Troop movement", ml: "Pergerakan tentera", id: "Pergerakan pasukan", tl: "Pagkilos ng hukbo", kr: "군대 이동", zh: "部队调动", jp: "部隊移動" },
           { en: "Convoy", ml: "Konvoi", id: "Konvoi", tl: "Konboy", kr: "호송대", zh: "车队", jp: "車列" },
           { en: "Deployment", ml: "Penempatan", id: "Pengerahan", tl: "Deployment", kr: "배치", zh: "部署", jp: "展開" },
           { en: "Exercise", ml: "Latihan", id: "Latihan", tl: "Pagsasanay", kr: "훈련", zh: "演习", jp: "演習" },
-          { en: "Mobilization", ml: "Mobilisasi", id: "Mobilisasi", tl: "Mobilisasyon", kr: "동원", zh: "动员", jp: "動員" }
-        ];
-
-        const sources = [
-          { region: "Global", name: "USGS Earthquake Tracker", type: "Seismic Map", url: "https://earthquake.usgs.gov/earthquakes/map/" },
-          { region: "Global", name: "NASA FIRMS", type: "Thermal Satellite / Fire", url: "https://firms.modaps.eosdis.nasa.gov/map/" },
-          { region: "Global", name: "Liveuamap World", type: "Live Geopolitical Incidents", url: "https://liveuamap.com/" },
-          { region: "Japan", name: "JMA Agency", type: "Official Meteorological Warnings", url: "https://www.jma.go.jp/" },
-          { region: "China", name: "What's on Weibo", type: "Social Listening & Censorship", url: "https://www.whatsonweibo.com/" },
-          { region: "Philippines", name: "PAGASA Weather", type: "National Tropical Monitoring", url: "https://www.pagasa.dost.gov.ph/" },
-          { region: "Indonesia", name: "BMKG Indonesia", type: "Seismic & Tsunami Hub", url: "https://www.bmkg.go.id/" }
-        ];
-
-        const languages = [
-            { code: 'en', label: 'ENGLISH', base: 'https://www.google.com/search?tbm=nws&q=' },
-            { code: 'ml', label: 'MALAY', base: 'https://www.facebook.com/search/top/?q=' },
-            { code: 'id', label: 'INDONESIAN', base: 'https://www.facebook.com/search/top/?q=' },
-            { code: 'tl', label: 'TAGALOG', base: 'https://www.facebook.com/search/top/?q=' },
-            { code: 'kr', label: 'KOREAN', base: 'https://twitter.com/search?q=' },
-            { code: 'zh', label: 'CHINESE', base: 'https://s.weibo.com/weibo/' },
-            { code: 'jp', label: 'JAPANESE', base: 'https://twitter.com/search?q=' }
-        ];
-
-        // INITIALIZE DROP-DOWN
-        const selectEl = document.getElementById('keyword-select');
-        keywords.forEach(k => {
-            const opt = document.createElement('option');
-            opt.value = k.en;
-            opt.textContent = k.en;
-            selectEl.appendChild(opt);
-        });
-
-        // REFRESH TRANSLATION BLOCKS
-        function updateTranslations() {
-            const currentSelected = selectEl.value;
-            const record = keywords.find(k => k.en === currentSelected);
-            const container = document.getElementById('translation-rows');
-            container.innerHTML = '';
-
-            languages.forEach(lang => {
-                const translatedWord = record[lang.code] || currentSelected;
-                const targetUrl = lang.base + encodeURIComponent(translatedWord);
-
-                const row = document.createElement('div');
-                row.className = 'search-row';
-                row.innerHTML = `
-                    <span><strong>${lang.label}:</strong> ${translatedWord}</span>
-                    <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="launch-btn">DEPLOY SEARCH ↗</a>
-                `;
-                container.appendChild(row);
-            });
-        }
-
-        // POPULATE STRATEGIC LINKS
-        const sourceContainer = document.getElementById('source-container');
-        sources.forEach(s => {
-            const item = document.createElement('a');
-            item.className = 'source-item';
-            item.href = s.url;
-            item.target = '_blank';
-            item.rel = 'noopener noreferrer';
-            item.innerHTML = `
-                <span class="source-tag">[${s.region}]</span>
-                <span class="source-name">${s.name}</span>
-                <span class="source-desc">// ${s.type}</span>
-            `;
-            sourceContainer.appendChild(item);
-        });
-
-        // TIME ZONE TRACKING
-        function updateClocks() {
-            const now = new Date();
-            const formatOptions = (offset) => {
-                const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-                const localTarget = new Date(utc + (3600000 * offset));
-                return localTarget.toLocaleTimeString();
-            };
-            document.getElementById('clk-pek').textContent = `PEK (UTC+8): ${formatOptions(8)}`;
-            document.getElementById('clk-tyo').textContent = `TYO (UTC+9): ${formatOptions(9)}`;
-            document.getElementById('clk-sel').textContent = `SEL (UTC+9): ${formatOptions(9)}`;
-            document.getElementById('clk-syd').textContent = `SYD (UTC+10): ${formatOptions(10)}`;
-        }
-
-        setInterval(updateClocks, 1000);
-        updateClocks();
-        updateTranslations();
-
-        // --- AI CHAT FUNCTIONS ---
-        function handleKeyPress(e) {
-            if (e.key === 'Enter') sendMessage();
-        }
-
-        async function sendMessage() {
-            const inputEl = document.getElementById('user-msg');
-            const keyEl = document.getElementById('api-key');
-            const chatBox = document.getElementById('chat-box');
-            
-            const query = inputEl.value.trim();
-            const apiKey = keyEl.value.trim();
-
-            if (!query) return;
-            if (!apiKey) {
-                alert("Please paste your Google Gemini API key to activate the co-pilot.");
-                return;
-            }
-
-            // Append User Message
-            const userDiv = document.createElement('div');
-            userDiv.className = 'msg msg-user';
-            userDiv.textContent = query;
-            chatBox.appendChild(userDiv);
-            inputEl.value = '';
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            // Append Loading Indicator
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'msg msg-bot';
-            loadingDiv.textContent = "Analyzing database...";
-            chatBox.appendChild(loadingDiv);
-
-            try {
-                // Construct System Context for the AI
-                const systemPrompt = `You are an expert open-source intelligence co-pilot built directly into the user's workspace. 
-                The user has access to these target keywords: ${JSON.stringify(keywords)}. 
-                The user tracks these regional feeds: ${JSON.stringify(sources)}. 
-                Answer the user's tactical question cleanly, utilizing the dataset when relevant. Keep analysis short and technical.`;
-
-                // Call Google Gemini API directly from browser
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{ text: `${systemPrompt}\n\nUser Question: ${query}` }]
-                        }]
-                    })
-                });
-
-                const data = await response.json();
-                const aiResponse = data.candidates[0].content.parts[0].text;
-
-                // Remove loading indicator and display answer
-                loadingDiv.textContent = aiResponse;
-            } catch (err) {
-                loadingDiv.textContent = "Error communicating with AI engine. Ensure your API key is valid and active.";
-            }
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-    </script>
-</body>
-</html>
+          { en: "Mobilization", ml: "Mobilisasi", id: "Mobilisasi", tl: "Mobilisasyon", kr: "동원", zh: "动员", jp: "動員"
