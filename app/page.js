@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 
-export default function OSINTFullStackTerminal() {
+export default function Page() {
   const [search, setSearch] = useState('Protest');
   const [time, setTime] = useState(null);
   const [chat, setChat] = useState([{ sender: 'bot', text: 'Terminal assistant initialized via full-stack gateway. Ready.' }]);
