@@ -87,7 +87,7 @@ export default function Page() {
   return (
     <div style={{ backgroundColor: '#0d0d0d', color: '#00ff00', minHeight: '100vh', padding: '2rem', fontFamily: 'monospace', display: 'flex', flexDirection: 'column' }}>
       <header style={{ borderBottom: '1px solid #2a2a2a', paddingBottom: '1rem', marginBottom: '2rem' }}>
-        <h1 style={{ color: '#d4af37', fontSize: '1.75rem', margin: 0 }}>⚜️ OSINT NEXUS TERMINAL v1.0</h1>
+        <h1 style={{ color: '#d4af37', fontSize: '1.75rem', margin: 0 }}>⚜️ OSINT NEXUS TERMINAL v2.5 SYSTEM ACTIVE</h1>
         <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.5rem', color: '#00ffff' }}>
           <span>PEK (UTC+8): {formatClock(8)}</span>
           <span>TYO (UTC+9): {formatClock(9)}</span>
