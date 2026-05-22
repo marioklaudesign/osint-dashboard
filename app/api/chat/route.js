@@ -1,18 +1,17 @@
 import { NextResponse } from 'next/server';
 
-// This completely stops Vercel/Next.js from caching this file
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function POST(request) {
-  // 1. Double check your API key is pasted exactly here inside the quotes:
-  const apiKey = "YOUR_API_KEY_HERE"; 
+  // Hardcoding your active key explicitly to bypass Vercel env cache issues
+  const apiKey = "AIzaSyC9xwUBNiPS5P4ukztLCnL-OHoh16aXLoU"; 
 
   try {
     const body = await request.json();
     const userQuery = body.query || "Hello";
 
-    // Standard stable endpoint
+    // Direct fetch endpoint using standard stable routing
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
@@ -20,8 +19,6 @@ export async function POST(request) {
       headers: {
         'Content-Type': 'application/json',
       },
-      // Adding a timestamp parameter forces the network to completely ignore old caches
-      next: { revalidate: 0 }, 
       body: JSON.stringify({
         contents: [{
           parts: [{ text: userQuery }]
@@ -31,17 +28,20 @@ export async function POST(request) {
 
     const data = await response.json();
 
+    // Check if Google directly complains about the model structure
     if (data.error) {
-      return NextResponse.json({ response: `Google API Error: ${data.error.message} (${data.error.status})` });
+      return NextResponse.json({ 
+        response: `Google API Return Exception: ${data.error.message} (${data.error.status})` 
+      });
     }
 
-    if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+    if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
       return NextResponse.json({ response: data.candidates[0].content.parts[0].text });
     }
 
-    return NextResponse.json({ response: "Empty payload returned." });
+    return NextResponse.json({ response: "Terminal error: Received empty vector mapping from core." });
 
   } catch (error) {
-    return NextResponse.json({ response: `Gateway Error: ${error.message}` });
+    return NextResponse.json({ response: `Nexus Gateway Error: ${error.message}` });
   }
 }
