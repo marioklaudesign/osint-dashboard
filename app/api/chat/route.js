@@ -15,9 +15,9 @@ export async function POST(request) {
     const body = await request.json();
     const userQuery = body.query || "Hello";
 
-    // Call the model using official SDK methods
+    // Call the targeted stable pro model variant string directly
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-pro-002', // You can change this to 'gemini-1.5-pro-001' if needed
       contents: userQuery,
     });
 
