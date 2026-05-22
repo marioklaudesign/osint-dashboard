@@ -1,34 +1,47 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
 
+// This completely stops Vercel/Next.js from caching this file
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function POST(request) {
-  // Paste your verified AI Studio key directly inside these quotes:
-  const apiKey = "AIzaSyC9xwUBNiPS5P4ukztLCnL-OHoh16aXLoU";
+  // 1. Double check your API key is pasted exactly here inside the quotes:
+  const apiKey = "YOUR_API_KEY_HERE"; 
 
   try {
-    // Initialize the official Google SDK client
-    const ai = new GoogleGenAI({ apiKey: apiKey });
-    
-    // Safely parse the incoming user query
     const body = await request.json();
     const userQuery = body.query || "Hello";
 
-    // Call the targeted stable pro model variant string directly
-    const response = await ai.models.generateContent({
-      model: 'gemini-1.5-pro-002', // You can change this to 'gemini-1.5-pro-001' if needed
-      contents: userQuery,
+    // Standard stable endpoint
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // Adding a timestamp parameter forces the network to completely ignore old caches
+      next: { revalidate: 0 }, 
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: userQuery }]
+        }]
+      })
     });
 
-    // Extract the text cleanly using the SDK built-in formatters
-    if (response.text) {
-      return NextResponse.json({ response: response.text });
+    const data = await response.json();
+
+    if (data.error) {
+      return NextResponse.json({ response: `Google API Error: ${data.error.message} (${data.error.status})` });
     }
 
-    return NextResponse.json({ response: "System connected, but text generation payload was empty." });
+    if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+      return NextResponse.json({ response: data.candidates[0].content.parts[0].text });
+    }
+
+    return NextResponse.json({ response: "Empty payload returned." });
 
   } catch (error) {
-    return NextResponse.json({ response: `Google SDK Connection Error: ${error.message}` });
+    return NextResponse.json({ response: `Gateway Error: ${error.message}` });
   }
 }
