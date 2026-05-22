@@ -55,8 +55,11 @@ export default function Page() {
     return entry ? entry[langKey] : search;
   };
 
-  const handleSend = async () => {
+  const handleSend = async (e) => {
+    // Prevent default form behavior if triggered from keyboard events
+    if (e) e.preventDefault();
     if (!input.trim() || loading) return;
+
     const userQuery = input.trim();
     setChat(prev => [...prev, { sender: 'user', text: userQuery }]);
     setInput('');
@@ -68,10 +71,14 @@ export default function Page() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: userQuery, keywords, sources })
       });
+      
       const data = await res.json();
-      setChat(prev => [...prev, { sender: 'bot', text: data.response || data.error || "Execution fault." }]);
-    } catch {
-      setChat(prev => [...prev, { sender: 'bot', text: "Failed to connect to fullstack server route." }]);
+      
+      // Look for the specific message response string mapping
+      const cleanResponse = data.response || data.error || "Execution fault returned from system engine.";
+      setChat(prev => [...prev, { sender: 'bot', text: cleanResponse }]);
+    } catch (error) {
+      setChat(prev => [...prev, { sender: 'bot', text: "Failed to establish validation link to fullstack gateway." }]);
     } finally {
       setLoading(false);
     }
@@ -122,8 +129,15 @@ export default function Page() {
             {loading && <div style={{ color: '#d4af37', fontSize: '0.85rem' }}>Processing backend vectors...</div>}
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder="Ask command center..." style={{ flex: 1, backgroundColor: '#000', color: '#00ff00', border: '1px solid #d4af37', padding: '0.5rem', fontFamily: 'monospace' }} />
-            <button onClick={handleSend} style={{ backgroundColor: '#d4af37', color: '#000', border: 'none', padding: '0.5rem 1rem', fontFamily: 'monospace', fontWeight: 'bold', cursor: 'pointer' }}>SEND</button>
+            <input 
+              type="text" 
+              value={input} 
+              onChange={(e) => setInput(e.target.value)} 
+              onKeyDown={(e) => e.key === 'Enter' && handleSend(e)} 
+              placeholder="Ask command center..." 
+              style={{ flex: 1, backgroundColor: '#000', color: '#00ff00', border: '1px solid #d4af37', padding: '0.5rem', fontFamily: 'monospace' }} 
+            />
+            <button onClick={(e) => handleSend(e)} style={{ backgroundColor: '#d4af37', color: '#000', border: 'none', padding: '0.5rem 1rem', fontFamily: 'monospace', fontWeight: 'bold', cursor: 'pointer' }}>SEND</button>
           </div>
         </div>
       </div>
